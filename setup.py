@@ -33,7 +33,14 @@ SUBSYSTEM=="hwmon", ATTR{name}=="pwmfan", ATTR{pwm1_enable}="1", RUN+="/bin/chmo
         subprocess.run(['udevadm', 'control', '--reload-rules'], check=True)
         subprocess.run(['udevadm', 'trigger'], check=True)
 
-        # Create systemd service
+        # Create logs directory and log file
+        logs_dir = os.path.join(script_dir, 'logs')
+        os.makedirs(logs_dir, exist_ok=True)
+        log_path = os.path.join(logs_dir, 'log.txt')
+        open(log_path, 'a').close()  # Create file if not exists
+        subprocess.run(['chown', '-R', f'{username}:{username}', logs_dir], check=True)
+
+        # Create systemd service with file logging
         service_content = '''
 [Unit]
 Description=FanControl-NG - Custom Fan Control Service for ODROID-HC4
@@ -45,26 +52,26 @@ ExecStart=/usr/bin/python3 {script_dir}/main.py
 Restart=always
 User={username}
 WorkingDirectory={script_dir}
-StandardOutput=journal
-StandardError=journal
+StandardOutput=append:{log_path}
+StandardError=inherit
 
 [Install]
 WantedBy=multi-user.target
-        '''.strip().format(script_dir=script_dir, username=username)
+        '''.strip().format(script_dir=script_dir, username=username, log_path=log_path)
 
         with open('/etc/systemd/system/fancontrol-ng.service', 'w') as f:
             f.write(service_content)
 
         subprocess.run(['systemctl', 'daemon-reload'], check=True)
 
-        # Create OpenRC script
+        # Create OpenRC script with file logging
         openrc_content = '''
 #!/sbin/openrc-run
 
 description="FanControl-NG - Custom Fan Control Service for ODROID-HC4"
 
 command="/usr/bin/python3"
-command_args="{script_dir}/main.py"
+command_args="{script_dir}/main.py >> {log_path} 2>&1"
 command_background="yes"
 pidfile="/run/fancontrol-ng.pid"
 command_user="{username}"
@@ -81,7 +88,7 @@ start_pre() {{
 stop_pre() {{
     ebegin "Stopping FanControl-NG"
 }}
-        '''.strip().format(script_dir=script_dir, username=username)
+        '''.strip().format(script_dir=script_dir, username=username, log_path=log_path)
 
         openrc_path = '/etc/init.d/fancontrol-ng'
         with open(openrc_path, 'w') as f:

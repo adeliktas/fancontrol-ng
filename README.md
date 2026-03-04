@@ -11,6 +11,7 @@ The project handles PWM fan control, thermal overrides, and permissions for non-
 - Error handling for permissions, guiding users to run setup.
 - Support for running as a background service (systemd and OpenRC).
 - Safe writes with permission checks.
+- Realtime logging to logs/log.txt for service output (view with tail -f logs/log.txt).
 
 ## Requirements
 - Python 3.x with NumPy (for interpolation).
@@ -40,14 +41,15 @@ The project handles PWM fan control, thermal overrides, and permissions for non-
      ```
      (Deactivate with `deactivate` when done. Note: If using venv, adjust service ExecStart to use venv/bin/python.)
 
-3. Run the setup script as root to configure groups, udev rules, reload, and install services automatically:
+3. Run the setup script as root to configure groups, udev rules, reload, install services automatically, and create logs dir/file with proper ownership:
    ```
    sudo python3 setup.py install
    ```
    - This creates the `hwmon` group, adds the calling user (or UID 1000 fallback) to it.
    - Installs udev rules for permissions on sysfs files.
    - Reloads udev rules.
-   - Installs systemd and OpenRC services with resolved paths (no manual edits needed).
+   - Installs systemd and OpenRC services with resolved paths and file logging (no manual edits needed).
+   - Creates logs/ dir and log.txt with user ownership.
 
 4. If necessary, relogin as your user to apply group changes.
 
@@ -89,7 +91,7 @@ If permissions are missing, the script will prompt to run `setup.py` as admin.
 
 ## Running as a Service
 
-setup.py automatically installs the services with correct paths and user.
+setup.py automatically installs the services with correct paths, user, and logging to logs/log.txt.
 
 ### Systemd
 - Enable and start:
@@ -97,6 +99,7 @@ setup.py automatically installs the services with correct paths and user.
 sudo systemctl enable fancontrol-ng.service
 sudo systemctl start fancontrol-ng.service
 ```
+- View logs: `tail -f logs/log.txt` or `journalctl -u fancontrol-ng.service`
 
 ### OpenRC
 - Add to default and start:
@@ -104,6 +107,7 @@ sudo systemctl start fancontrol-ng.service
 rc-update add fancontrol-ng default
 /etc/init.d/fancontrol-ng start
 ```
+- View logs: `tail -f logs/log.txt`
 
 If using venv, manually adjust ExecStart/command in the service file to point to venv/bin/python.
 
