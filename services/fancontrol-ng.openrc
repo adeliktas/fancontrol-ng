@@ -1,0 +1,22 @@
+#!/sbin/openrc-run
+
+description="FanControl-NG - Custom Fan Control Service for ODROID-HC4"
+
+command="/usr/bin/python3"
+command_args="/path/to/your/fancontrol-ng.py"  # Replace with the actual path to your Python script
+command_background="yes"
+pidfile="/run/fancontrol-ng.pid"
+command_user="root"  # Or change to a non-root user if permissions are set up
+
+depend() {
+    need localmount
+    after bootmisc
+}
+
+start_pre() {
+    ebegin "Starting FanControl-NG"
+}
+
+stop_pre() {
+    ebegin "Stopping FanControl-NG"
+}

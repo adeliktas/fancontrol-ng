@@ -1,0 +1,23 @@
+{
+  "curve": [
+    [0, 0],
+    [5, 5],
+    [10, 10],
+    [20, 30],
+    [30, 40],
+    [35, 45],
+    [40, 60],
+    [45, 75],
+    [50, 90],
+    [55, 100]
+  ],
+  "sleep_interval": 10,
+  "thermal_mode_path": "",
+  "thermal_temp_path": "",
+  "pwm_enable_glob": "",
+  "pwm_glob": "",
+  "plot_min_temp": 0,
+  "plot_max_temp": 60,
+  "plot_step": 5,
+  "max_bar_width": 50
+}
