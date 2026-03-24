@@ -12,6 +12,7 @@ The project handles PWM fan control, thermal overrides, and permissions for non-
 - Support for running as a background service (systemd and OpenRC).
 - Safe writes with permission checks.
 - Realtime logging to logs/log.txt for service output (view with tail -f logs/log.txt).
+- Automatic creation of missing files (config.json, fan_read_mappings.sh, fan_mapping.json) and one-time fan calibration on first setup.
 
 ## Requirements
 - Python 3.x with NumPy (for interpolation).
@@ -50,6 +51,7 @@ The project handles PWM fan control, thermal overrides, and permissions for non-
    - Reloads udev rules.
    - Installs systemd and OpenRC services with resolved paths and file logging (no manual edits needed).
    - Creates logs/ dir and log.txt with user ownership.
+   - **Also automatically creates** `fan_read_mappings.sh`, default `config.json`, and runs a one-time fan calibration to generate `fan_mapping.json` (if missing).
 
 4. If necessary, relogin as your user to apply group changes.
 
@@ -59,7 +61,7 @@ The project handles PWM fan control, thermal overrides, and permissions for non-
   ```
   python3 main.py
   ```
-  - It loads config.json, displays the curve table and ASCII plot.
+  - It loads (or auto-creates) config.json, displays the curve table and ASCII plot.
   - Starts a loop to monitor CPU temp and adjust PWM based on the configured interval.
   - Press Ctrl+C to stop.
 
@@ -86,7 +88,7 @@ If permissions are missing, the script will prompt to run `setup.py` as admin.
     "max_bar_width": 50
   }
   ```
-  - Curve: List of [temp_C, percentage] pairs (temperatures in °C, percentages map to PWM 0-255).
+  - Curve: List of [temp_C, percentage] pairs (temperatures in °C, percentages now map to **% of real maximum RPM** thanks to the auto-generated `fan_mapping.json`).
   - Paths/Globs: Leave empty ("") for automatic runtime defaults; set to custom values to override.
 
 ## Running as a Service
@@ -117,6 +119,7 @@ If using venv, manually adjust ExecStart/command in the service file to point to
 - **Fan Not Responding**: check `dmesg | grep pwm`.
 - **Thermal Override**: Udev disables it automatically; verify with `cat /sys/class/thermal/thermal_zone0/mode`.
 - **Variable hwmon Index**: Script uses glob to find paths automatically.
+- **No fan_mapping.json or calibration needed later**: Delete `fan_mapping.json` and re-run `sudo python3 setup.py install`.
 
 ## License
 MIT License. See [LICENSE](LICENSE) for details.

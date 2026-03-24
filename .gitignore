@@ -1,1 +1,3 @@
 .venv/*
+hc4_fan_setup.egg-info/*
+logs/*
